@@ -5,103 +5,106 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using HuatuoGame;
 
-struct MyValue
+namespace HuatuoGame
 {
-    public int x;
-    public float y;
-    public string s;
-}
-
-public class App
-{
-    public static int Main()
+    struct MyValue
     {
-#if !UNITY_EDITOR
-        LoadMetadataForAOTAssembly();
-#endif
-        Debug.Log("hello, huatuo");
-
-        var go = new GameObject("HotFix2");
-        go.AddComponent<CreateByHotFix2>();
-
-        TestAOTGeneric();
-        return 0;
+        public int x;
+        public float y;
+        public string s;
     }
 
-    /// <summary>
-    /// ²âÊÔ aot·ºÐÍ£¬Õâ¸ö´úÂë´ó¼Ò×Ô¼ºÖ÷¶¯µ÷°É
-    /// </summary>
-    public static void TestAOTGeneric()
+    public class App
     {
-        var arr = new List<MyValue>();
-        arr.Add(new MyValue() { x = 1, y = 10, s = "abc" });
-        var e = arr[0];
-        Debug.LogFormat("x:{0} y:{1} s:{2}", e.x, e.y, e.s);
-    }
+        public static int Main()
+        {
+    #if !UNITY_EDITOR
+            LoadMetadataForAOTAssembly();
+    #endif
+            Debug.Log("hello, huatuo");
 
-    /// <summary>
-    /// Îªaot assembly¼ÓÔØÔ­Ê¼metadata£¬ Õâ¸ö´úÂë·Åaot»òÕßÈÈ¸üÐÂ¶¼ÐÐ¡£
-    /// Ò»µ©¼ÓÔØºó£¬Èç¹ûAOT·ºÐÍº¯Êý¶ÔÓ¦nativeÊµÏÖ²»´æÔÚ£¬Ôò×Ô¶¯Ìæ»»Îª½âÊÍÄ£Ê½Ö´ÐÐ
-    /// </summary>
-    public static unsafe void LoadMetadataForAOTAssembly()
-    {
-        // ¿ÉÒÔ¼ÓÔØÈÎÒâaot assemblyµÄ¶ÔÓ¦µÄdll¡£µ«ÒªÇódll±ØÐëÓëunity build¹ý³ÌÖÐÉú³ÉµÄ²Ã¼ôºóµÄdllÒ»ÖÂ£¬¶ø²»ÄÜÖ±½ÓÊ¹ÓÃ
-        // Ô­Ê¼dll¡£
-        // ÕâÐ©dll¿ÉÒÔÔÚÄ¿Â¼ Temp\StagingArea\Il2Cpp\Managed ÏÂÕÒµ½¡£
-        // ¶ÔÓÚWin Standalone£¬Ò²¿ÉÒÔÔÚ buildÄ¿Â¼µÄ {Project}/ManagedÄ¿Â¼ÏÂÕÒµ½¡£
-        // ¶ÔÓÚAndroid¼°ÆäËûtarget, µ¼³ö¹¤³ÌÖÐ²¢Ã»ÓÐÕâÐ©dll£¬Òò´Ë»¹ÊÇµÃÈ¥ Temp\StagingArea\Il2Cpp\Managed »ñÈ¡¡£
-        //
-        // ÕâÀïÒÔ×î³£ÓÃµÄmscorlib.dll¾ÙÀý
-        //
-        // ¼ÓÔØ´ò°üÊ± unityÔÚbuildÄ¿Â¼ÏÂÉú³ÉµÄ ²Ã¼ô¹ýµÄ mscorlib£¬×¢Òâ£¬²»ÄÜÎªÔ­Ê¼mscorlib
-        //
-        //string mscorelib = @$"{Application.dataPath}/../Temp/StagingArea/Il2Cpp/Managed/mscorlib.dll";
-        List<string> dllNameList = new List<string>
-        {
-            "mscorlib.dll",
-        };
-        foreach (var name in dllNameList)
-        {
-#if PLATFORM_ANDROID
-            byte[] dllBytes = GetTextForStreamingAssets(name);
-#else
-        string mscorelib = Path.Combine(Application.streamingAssetsPath, "mscorlib.dll");
-        byte[] dllBytes = File.ReadAllBytes(mscorelib);
-#endif
-            fixed (byte* ptr = dllBytes)
-            {
-                // ¼ÓÔØassembly¶ÔÓ¦µÄdll£¬»á×Ô¶¯ÎªËühook¡£Ò»µ©aot·ºÐÍº¯ÊýµÄnativeº¯Êý²»´æÔÚ£¬ÓÃ½âÊÍÆ÷°æ±¾´úÂë
-                int err = Huatuo.HuatuoApi.LoadMetadataForAOTAssembly((IntPtr)ptr, dllBytes.Length);
-                Debug.Log("LoadMetadataForAOTAssembly. ret:" + err);
-            }
+            var go = new GameObject("HotFix2");
+            go.AddComponent<CreateByHotFix2>();
+
+            TestAOTGeneric();
+            return 0;
         }
-    }
 
-    /// <summary>
-    /// Í¨¹ýUnityWebRequest»ñÈ¡±¾µØStreamingAssetsÎÄ¼þ¼ÐÖÐµÄÎÄ¼þ
-    /// </summary>
-    /// <param name="path">StreamingAssetsÎÄ¼þ¼ÐÖÐÎÄ¼þÃû×Ö¼Óºó×º</param>
-    /// <returns></returns>
-    public static byte[] GetTextForStreamingAssets(string path)
-    {
-        var uri = new System.Uri(Path.Combine(Application.streamingAssetsPath, path));
-        UnityWebRequest request = UnityWebRequest.Get(uri);
-        request.SendWebRequest();//¶ÁÈ¡Êý¾Ý
-        if (request.error == null)
+        /// <summary>
+        /// ï¿½ï¿½ï¿½ï¿½ aotï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// </summary>
+        public static void TestAOTGeneric()
         {
-            while (true)
+            var arr = new List<MyValue>();
+            arr.Add(new MyValue() { x = 1, y = 10, s = "abc" });
+            var e = arr[0];
+            Debug.LogFormat("x:{0} y:{1} s:{2}", e.x, e.y, e.s);
+        }
+
+        /// <summary>
+        /// Îªaot assemblyï¿½ï¿½ï¿½ï¿½Ô­Ê¼metadataï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½aotï¿½ï¿½ï¿½ï¿½ï¿½È¸ï¿½ï¿½Â¶ï¿½ï¿½Ð¡ï¿½
+        /// Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½AOTï¿½ï¿½ï¿½Íºï¿½ï¿½ï¿½ï¿½ï¿½Ó¦nativeÊµï¿½Ö²ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½æ»»Îªï¿½ï¿½ï¿½ï¿½Ä£Ê½Ö´ï¿½ï¿½
+        /// </summary>
+        public static unsafe void LoadMetadataForAOTAssembly()
+        {
+            // ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½aot assemblyï¿½Ä¶ï¿½Ó¦ï¿½ï¿½dllï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½dllï¿½ï¿½ï¿½ï¿½ï¿½ï¿½unity buildï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÉµÄ²Ã¼ï¿½ï¿½ï¿½ï¿½dllÒ»ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½
+            // Ô­Ê¼dllï¿½ï¿½
+            // ï¿½ï¿½Ð©dllï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ Temp\StagingArea\Il2Cpp\Managed ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½Win Standaloneï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ buildÄ¿Â¼ï¿½ï¿½ {Project}/ManagedÄ¿Â¼ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½Androidï¿½ï¿½ï¿½ï¿½ï¿½ï¿½target, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ð©dllï¿½ï¿½ï¿½ï¿½Ë»ï¿½ï¿½Çµï¿½È¥ Temp\StagingArea\Il2Cpp\Managed ï¿½ï¿½È¡ï¿½ï¿½
+            //
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½î³£ï¿½Ãµï¿½mscorlib.dllï¿½ï¿½ï¿½ï¿½
+            //
+            // ï¿½ï¿½ï¿½Ø´ï¿½ï¿½Ê± unityï¿½ï¿½buildÄ¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Éµï¿½ ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ mscorlibï¿½ï¿½×¢ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ÎªÔ­Ê¼mscorlib
+            //
+            //string mscorelib = @$"{Application.dataPath}/../Temp/StagingArea/Il2Cpp/Managed/mscorlib.dll";
+            List<string> dllNameList = new List<string>
             {
-                if (request.downloadHandler.isDone)//ÊÇ·ñ¶ÁÈ¡ÍêÊý¾Ý
+                "mscorlib.dll",
+            };
+            foreach (var name in dllNameList)
+            {
+    #if PLATFORM_ANDROID
+                byte[] dllBytes = GetTextForStreamingAssets(name);
+    #else
+            string mscorelib = Path.Combine(Application.streamingAssetsPath, "mscorlib.dll");
+            byte[] dllBytes = File.ReadAllBytes(mscorelib);
+    #endif
+                fixed (byte* ptr = dllBytes)
                 {
-                    return request.downloadHandler.data;
+                    // ï¿½ï¿½ï¿½ï¿½assemblyï¿½ï¿½Ó¦ï¿½ï¿½dllï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½Îªï¿½ï¿½hookï¿½ï¿½Ò»ï¿½ï¿½aotï¿½ï¿½ï¿½Íºï¿½ï¿½ï¿½ï¿½ï¿½nativeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½ï¿½ï¿½
+                    int err = Huatuo.HuatuoApi.LoadMetadataForAOTAssembly((IntPtr)ptr, dllBytes.Length);
+                    Debug.Log("LoadMetadataForAOTAssembly. ret:" + err);
                 }
             }
         }
-        else
+
+        /// <summary>
+        /// Í¨ï¿½ï¿½UnityWebRequestï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½StreamingAssetsï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½Ä¼ï¿½
+        /// </summary>
+        /// <param name="path">StreamingAssetsï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ö¼Óºï¿½×º</param>
+        /// <returns></returns>
+        public static byte[] GetTextForStreamingAssets(string path)
         {
-            return null;
+            var uri = new System.Uri(Path.Combine(Application.streamingAssetsPath, path));
+            UnityWebRequest request = UnityWebRequest.Get(uri);
+            request.SendWebRequest();//ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
+            if (request.error == null)
+            {
+                while (true)
+                {
+                    if (request.downloadHandler.isDone)//ï¿½Ç·ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    {
+                        return request.downloadHandler.data;
+                    }
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
     }
-
 }

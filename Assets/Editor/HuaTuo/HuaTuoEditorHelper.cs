@@ -144,6 +144,10 @@ namespace HuaTuo
 
             CompileDll(GetDllBuildOutputDirByTarget(target), target);
 
+            // 2022-06-11 by Ron 这里增加混淆的处理.如果不做混淆 & 加密.直接注释就行了
+            HuaTuo_DllProtect.BPObfuscate(target);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
             var hotfixDlls = new List<string>()
             {
                 "HotFix.dll",
